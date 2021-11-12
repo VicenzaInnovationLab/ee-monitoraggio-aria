@@ -1,6 +1,6 @@
 # InnovationLab Vicenza: Osservazione degli inquinanti atmosferici i dati satellitari Copernicus
 
-**Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la [nostra web app](https://code.earthengine.google.com/), basata sulla piattaforma cloud Google Earth Engine e dati satellitari europei.**
+**Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la [nostra web app](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria), basata sulla piattaforma cloud Google Earth Engine e dati satellitari europei.**
 
 ![logo InnovationLab Vicenza](img/logo-innovationlab.png)
 
