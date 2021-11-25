@@ -47,7 +47,7 @@ Non appena hai l'account Earth Engine, esplora la sua interfaccia con [questo ma
 
 ## Contatti
 
-- Progetto nel sito del comune: [VicenzaInnovationLab](https://https://www.comune.vicenza.it/uffici/cms/innovationlabvicenza.php/)
+- Progetto nel sito del comune: [VicenzaInnovationLab](https://www.comune.vicenza.it/uffici/cms/innovationlabvicenza.php)
 - Sviluppatore: [Yaroslav Vasyunin](https://www.linkedin.com/in/vasyunin), Digital Innovation Hub di Confartigianato Vicenza ([digitalinnovationhubvicenza.it](https://digitalinnovationhubvicenza.it/))
 
 ## Ringraziamenti
