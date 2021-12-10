@@ -1,8 +1,8 @@
 # Osservazione degli inquinanti atmosferici nel vicentino mediante i dati satellitari Copernicus
 
-**Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la [nostra web app](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria) basata su Google Earth Engine, una piattaforma big data, e immagini satellitari europei.**
+Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la [nostra web app](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria) basata su Google Earth Engine, una piattaforma big data, e immagini satellitari europei.
 
-<img  src="img/app-cover.png" alt="logo InnovationLab Vicenza" width="300">
+<img  src="img/app-cover.png" alt="logo dell'InnovationLab Vicenza" width="300">
 
 ## Indice
 1. [Finanziamento](#finanziamento)
@@ -13,7 +13,6 @@
 6. [Contatti](#contatti)
 7. [Ringraziamenti](#ringraziamenti)
 8. [Licenza](#licenza)
-
 
 ## Finanziamento
 
@@ -37,7 +36,13 @@ Questo repository contiene il codice JavaScript che abbiamo utilizzato per l'ela
 
 ## Come usare la web app
 
-SCREENSHOT
+1. Quando la web app è aperta (potrebbero volerci alcuni secondi per caricarla), si apre una mappa della provincia di Vicenza. Per impostazione predefenita si dimostra il contenuto NO₂ colonnare in troposfera.
+
+2. Nel panello di sinistra si può scegliere sia l'intera regione che un singolo comune. Non
+
+3. 
+
+ dove la diversa intensità del colore giallo-arancio mostra la radianza di un determinato territorio. Questa mappa mostra le medie per il periodo prescelto (vedi sotto).
 
 ## Come usare il codice sorgente
 
