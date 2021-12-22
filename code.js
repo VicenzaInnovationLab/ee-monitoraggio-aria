@@ -11,20 +11,20 @@
  ******************************************************************************/
 
 // Choose app language: "it", "en" or "ru"
-var ln = "ru";  
+var ln = "it";  
 
 // Define a JSON object for storing translated text
 var t = {};
 // About panel
 
 t.about = {};
-t.about.title = {
+t.title = {
+  it: "Osservazione degli inquinanti atmosferici nel vicentino mediante \
+  i dati satellitari Copernicus",
   en: "Observation of atmospheric pollutants in the Vicenza provinceh \
   throug the Copernicus satellite data",
   ru: "Наблюдение за загрязнением атмосферы в провинции Виченца с помощью \
-  спутниковых данных Copernicus",
-  it: "Osservazione degli inquinanti atmosferici nel vicentino mediante \
-  i dati satellitari Copernicus"
+  спутниковых данных Copernicus"
 };
 t.about.funding = {
   it: "Il progetto è parte del Programma Operativo Regionale del Fondo \
@@ -209,7 +209,6 @@ t.timeline.title = {
 };
 t.timeline.start = {en: "Start: ", ru: "Начало: ", it: "Inizio: "};
 t.timeline.end = {en: "End: ", ru: "Конец: ", it: "FIne: "};
-
 
 // Statistics
 t.stats = {};
@@ -480,36 +479,18 @@ m.rData["Aerosol Index"] = {
     }
 };
 
-// Misc
-var subText = "";
-var descriptionText = "";
-
-var image;
-var aboutPanelVisible = true;
-
-// Styling and display
-var regionOpacity = 0.6;
-var aoiStyle = {color: "00000050", width: 1, fillColor: "FF000000"};
-var showQueryPoint = true;
-var queryPointStyle = {color: "red"};  //color, pointSize, pointShape, width, fillColor, styleProperty, neighborhood, lineType
-
-
-// ### GENERAL ###
-
-var comparisonInfo =
-  {
-    band: "meanValue",
-    unitsLabel: "",
-    visParams: {
-      palette: m.palette.diff,
-    }
-  };
+m.comparisonInfo = {
+  band: "meanValue",
+  unitsLabel: "",
+  visParams: {
+    palette: m.palette.diff,
+  }
+};
 
 // System
-var aoiLayerIndex = 0;
-var imageLayerIndex = 1;
-var scale = 50000;  // higher numbers speed calculation up, smaller numbers make it slower and may result in computation errors
-var imageOpacity = regionOpacity;
+m.aoiLayerIndex = 0;
+m.imageLayerIndex = 1;
+m.scale = 50000;  // higher numbers speed calculation up, smaller numbers make it slower and may result in computation errors
 
 // Timeline
 m.timeline = {};
@@ -530,6 +511,8 @@ m.timeline.dateInfo = {
 
 var c = {};
 
+c.title = ui.Label(t.title[ln]);
+
 c.dataSelector = ui.Select(Object.keys(m.rData));
 c.colSelector = ui.Select(["Near-real-time", "Offline"]);
 
@@ -548,49 +531,92 @@ c.meanMultiplierSlider = ui.Slider({
 });
 c.regionMeanLabel = ui.Label("", {whiteSpace: "pre"});
 
-// Get data information - used globally in functions
-c.dataset = {};
-c.dataset.url = ui.url.get("dataset", "Nitrogen dioxide (NO2)");
-ui.url.set("dataset", c.dataset.url);  // need to set in case this is the initial load
-c.thisData = m.rData[c.dataset.url];
-c.dataSelector.set({placeholder: c.dataset.url, value: c.dataset.url});
+/* URL Handling ***************************************************************/
+
+c.url = {};
+
+c.url.dataset = ui.url.get("dataset", "Nitrogen dioxide (NO2)");
+ui.url.set("dataset", c.url.dataset);  // need to set in case this is the initial load
+c.thisData = m.rData[c.url.dataset];
+c.dataSelector.set({placeholder: c.url.dataset, value: c.url.dataset});
 
 // Set the datatype
-var dataTypeUrl = ui.url.get("datatype", "Near-real-time");
-ui.url.set("datatype", dataTypeUrl);
-c.thisData.colId = c.thisData[dataTypeUrl];
-c.colSelector.set({placeholder: dataTypeUrl, value: dataTypeUrl});
+c.url.dataType = ui.url.get("datatype", "Near-real-time");
+ui.url.set("datatype", c.url.dataType);
+c.thisData.colId = c.thisData[c.url.dataType];
+c.colSelector.set({placeholder: c.url.dataType, value: c.url.dataType});
 
 // Get initial map bounds from the url parameter.
-var initPoint = ee.Geometry.Point(m.vData.centerPoint).toGeoJSONString();
-var center = ui.url.get("center", initPoint);
-ui.url.set("center", center);
-var zoom = ui.url.get("zoom", m.vData.zoom);
-ui.url.set("zoom", zoom);
+c.url.center = ui.url.get(
+  "center",
+  ee.Geometry.Point(m.vData.centerPoint).toGeoJSONString()
+);
+ui.url.set("center", c.url.center);
 
-var startSliderDateUrl = ui.url.get("startdate", m.timeline.start);
-ui.url.set("startdate", startSliderDateUrl);
+c.url.zoom = ui.url.get("zoom", m.vData.zoom);
+ui.url.set("zoom", c.url.zoom);
 
-var endSliderDateUrl = ui.url.get("enddate", m.timeline.end);
-ui.url.set("enddate", endSliderDateUrl);
+c.url.startSliderDate = ui.url.get("startdate", m.timeline.start);
+ui.url.set("startdate", c.url.startSliderDate);
 
-m.timeline.dateInfo.start.selected = startSliderDateUrl;
-m.timeline.dateInfo.end.selected = endSliderDateUrl;
+c.url.endSliderDate = ui.url.get("enddate", m.timeline.end);
+ui.url.set("enddate", c.url.endSliderDate);
 
-var meanMultiplier = ui.url.get("meanMultiplier", 2);  // region average multiplier for diff. color stretch
-ui.url.set("meanMultiplier", meanMultiplier);  // need to set in case this is the initial load.
-c.meanMultiplierSlider.setValue(meanMultiplier, false);
+m.timeline.dateInfo.start.selected = c.url.startSliderDate;
+m.timeline.dateInfo.end.selected = c.url.endSliderDate;
+
+c.url.meanMultiplier = ui.url.get("meanMultiplier", 2);  // region average multiplier for diff. color stretch
+ui.url.set("meanMultiplier", c.url.meanMultiplier);  // need to set in case this is the initial load.
+c.meanMultiplierSlider.setValue(c.url.meanMultiplier, false);
 
 // About panel
+
+/* About Panel ****************************************************************/
+
 c.about = {};
+
 c.about.title = ui.Label(t.about.title[ln]);
 c.about.logo = ui.Thumbnail({
   image: ee.Image("users/VicenzaInnovationLab/logo-progetto"),
   params: {min: 0, max: 255}
 });
 c.about.funding = ui.Label(t.about.funding[ln]);
-c.about.panel = ui.Panel([c.about.title, c.about.logo, c.about.funding]);
 
+c.about.dataSource = ui.Label({
+  value: t.about.data[ln],
+  targetUrl: "https://sentinel.esa.int/web/sentinel/missions/sentinel-5p"
+});
+c.about.gitHub = ui.Label({
+  value: t.about.refs[ln],
+  targetUrl: "https://github.com/VicenzaInnovationLab/ee-monitoraggio-aria"
+});
+
+c.about.closeButton = ui.Button({
+  label: t.about.closeButton[ln],
+  onClick: function() {
+    c.about.openButton.style().set("shown", true);
+    c.about.panel.style().set("shown", false);
+  }
+});
+c.about.openButton = ui.Button({
+  label: t.about.openButton[ln],
+  onClick: function() {
+    c.about.openButton.style().set("shown", false);
+    c.about.panel.style().set("shown", true);
+  }
+});
+
+c.about.panel = ui.Panel([
+  c.about.logo,
+  c.about.funding,
+  c.about.title,
+  c.about.dataSource,
+  c.about.gitHub,
+  c.about.closeButton]
+);
+
+
+// AOI selection
 c.vData = {};
 c.vData.regCheckbox = ui.Checkbox({
   label: t.aoi.admSupCheckbox[ln],
@@ -618,7 +644,10 @@ c.vData.panel = ui.Panel([
     {stretch: "horizontal"})
 ]);
 
-var dataSelectPanel = ui.Panel({
+// Data selection
+
+c.rData = {};
+c.rData.panel = ui.Panel({
   widgets: [
     ui.Label({value: t.rData.title[ln]}),
     ui.Panel(
@@ -663,12 +692,12 @@ c.timeline.panel = ui.Panel({
   ]
 });
 
-var modeSelectPanel = ui.Panel({
-  widgets: [c.compare.checkbox, c.regionMeanLabel],//scaleSelector],
+c.modeSelectPanel = ui.Panel({
+  widgets: [c.compare.checkbox, c.regionMeanLabel],
   layout: ui.Panel.Layout.flow("horizontal"), style: {stretch: "horizontal"}
 });
 
-var meanMultiplierPanel = ui.Panel({
+c.meanMultiplierPanel = ui.Panel({
   widgets: [
     ui.Label(t.stats.histStretch[ln]),
     c.meanMultiplierSlider,
@@ -676,103 +705,106 @@ var meanMultiplierPanel = ui.Panel({
   layout: ui.Panel.Layout.flow("horizontal"), style: {stretch: "horizontal"}
 });
 
-var exportPanel = ui.Panel({
+c.exportPanel = ui.Panel({
   widgets: [c.download.button, c.download.urlLabel],
   layout: ui.Panel.Layout.flow("vertical"), style: {stretch: "horizontal"}
 });
 
-var compareModePanel = ui.Panel({
+c.compareModePanel = ui.Panel({
   widgets: [
-    meanMultiplierPanel
+    c.meanMultiplierPanel
   ],
   layout: ui.Panel.Layout.flow("vertical"),
   style: {stretch: "horizontal", shown: false}
 });
 
 //INSPECTOR PANEL START
-var inspectorPanel = ui.Panel({
+c.inspector = {};
+c.inspector.panel = ui.Panel({
   layout: ui.Panel.Layout.flow("vertical"),
 });
-var inspectorTitle = ui.Label({
-  value: t.stats.valAtPoint.title[ln],
-  style: {margin: "4px 8px", fontWeight: "bold", fontSize: "13px"}
-});
-inspectorPanel.add(inspectorTitle);
+c.inspector.title = ui.Label(t.stats.valAtPoint.title[ln]);
+c.inspector.panel.add(c.inspector.title);
 
-var placeHolder = ui.Label({
-  value: t.stats.valAtPoint.subtitle[ln],
-  style: {margin: "4px 8px", fontSize: "13px"},
-});
-inspectorPanel.add(placeHolder);
+c.inspector.placeholder = ui.Label(t.stats.valAtPoint.subtitle[ln]);
+c.inspector.panel.add(c.inspector.placeholder);
+
 c.stats = {};
-var latLabel = ui.Label({style: {fontSize: "13px", shown: false}});
-var lonLabel = ui.Label({style: {fontSize: "13px", shown: false}});
-var meanLabel = ui.Label({style: {fontSize: "13px", shown: false}});
-var diffLabel = ui.Label({style: {fontSize: "13px", shown: false}});
+c.stats.latLabel = ui.Label();
+c.stats.lonLabel = ui.Label();
+c.stats.meanLabel = ui.Label();
+c.stats.diffLabel = ui.Label();
 
-var pointStatsPanel = ui.Panel({
-  widgets: [latLabel, lonLabel, meanLabel, diffLabel],
+c.stats.panel = ui.Panel({
+  widgets: [c.stats.latLabel, c.stats.lonLabel, c.stats.meanLabel, c.stats.diffLabel],
 });
-inspectorPanel.add(pointStatsPanel);
+c.inspector.panel.add(c.stats.panel);
 
-//INSPECTOR PANEL END
-
-var panelCloseButton = ui.Button({
+c.controlPanelHide = ui.Button({
   label: t.control.hide[ln],
   onClick: function () {
-    panelOpenButton.style().set("shown", true);
+    c.controlPanelShow.style().set("shown", true);
     c.controlPanel.style().set("shown", false);
   },
   style: {width: "95%"},
+});
+
+c.controlPanelShow = ui.Button({
+  label: t.control.show[ln],
+  onClick: function () {
+    c.controlPanelShow.style().set("shown", false);
+    c.controlPanel.style().set("shown", true);
+  },
+  style: {position: "bottom-left", "shown": false}
 });
 
 c.panelBreaks = createPanelBreaks(6);
 c.legend = {};
 c.legend.index = 10;
 
-c.controlPanel = ui.Panel({
-  widgets:
-    [
-      c.about.panel,
-      c.panelBreaks[0],
-      c.vData.panel,
-      c.panelBreaks[1],
-      dataSelectPanel,
-      c.panelBreaks[2],
-      modeSelectPanel,
-      compareModePanel,
-      c.panelBreaks[3],
-      c.timeline.panel,
-      c.panelBreaks[4],
-      ui.Panel(null, null), // legend placeholder
-      inspectorPanel,
-      c.panelBreaks[5],
-      exportPanel,
-      c.panelBreaks[6],
-      panelCloseButton,
-    ],
-  style: {width: "23%", margin: "10px", "shown": aboutPanelVisible}
-});
-
-var panelOpenButton = ui.Button({
-  label: t.control.show[ln],
-  onClick: function () {
-    panelOpenButton.style().set("shown", false);
-    c.controlPanel.style().set("shown", true);
-  },
-  style: {position: "bottom-left", "shown": !aboutPanelVisible}
-});
+c.controlPanel = ui.Panel([
+    c.title,
+    c.panelBreaks[0],
+    c.vData.panel,
+    c.panelBreaks[1],
+    c.rData.panel,
+    c.panelBreaks[2],
+    c.modeSelectPanel,
+    c.compareModePanel,
+    c.panelBreaks[3],
+    c.timeline.panel,
+    c.panelBreaks[4],
+    ui.Panel(null, null), // legend placeholder
+    c.inspector.panel,
+    c.panelBreaks[5],
+    c.exportPanel,
+    c.panelBreaks[6],
+    c.controlPanelHide,
+  ]
+);
 
 /*******************************************************************************
  * Composition *
  ******************************************************************************/
 
+ ui.root.insert(0, c.controlPanel);
+ ui.root.insert(2, c.about.panel);
+ Map.add(c.controlPanelShow);
+ Map.add(c.about.openButton);
+ 
 /*******************************************************************************
  * Styling *
  ******************************************************************************/
 
 /* Style definition ***********************************************************/
 var s = {};
+
+s.title = {
+  fontSize: "26px",
+  fontWeight: "bold",
+  color: "#b71c1a"
+};
+
 s.dateSlider = {
   width: "50px",
   color: "000",
@@ -780,7 +812,15 @@ s.dateSlider = {
   padding: "25px 0px 0px 0px"
 };
 
+s.queryPointStyle = {color: "red"};  //color, pointSize, pointShape, width, fillColor, styleProperty, neighborhood, lineType
+
+s.imageOpacity = 0.6;
+s.aoiStyle = {color: "00000050", width: 1, fillColor: "ff000000"};
+s.showQueryPoint = true;
+
 /* Style setting ***************************************************************/
+
+c.title.style().set(s.title);
 
 c.about.logo.style().set({width: "200px"});
 c.about.title.style().set({
@@ -790,12 +830,7 @@ c.about.title.style().set({
   stretch: "horizontal",
   color: "#b71c1a"
 });
-c.about.funding.style().set({
-  fontSize: "10px",
-  textAlign: "justify",
-  stretch: "horizontal",
-  color: "#a0a3a6",
-});
+c.about.funding.style().set({textAlign: "left", stretch: "horizontal"});
 c.dataSelector.style().set({width: "45%"});
 c.colSelector.style().set({width: "45%"});
 c.vData.municipSelector.style().set({width: "45%"});
@@ -805,594 +840,620 @@ c.download.button.style().set({width: "95%"});
 c.timeline.start.label.style().set(s.dateSlider);
 c.timeline.end.label.style().set(s.dateSlider);
 
+c.stats.latLabel.style().set({fontSize: "13px", shown: false});
+c.stats.lonLabel.style().set({fontSize: "13px", shown: false});
+c.stats.meanLabel.style().set({fontSize: "13px", shown: false});
+c.stats.diffLabel.style().set({fontSize: "13px", shown: false});
+
+c.inspector.title.style().set({
+  margin: "4px 8px", fontWeight: "bold", fontSize: "13px"
+});
+
+c.inspector.placeholder.style().set({
+  margin: "4px 8px", fontSize: "13px"
+});
+
+c.controlPanel.style().set({
+  width: "23%", margin: "10px", "shown": true
+});
+
+// About panel
+s.aboutButton = {position: "bottom-right", "shown": true};
+
+c.about.panel.style().set({width: "400px", shown: false});
+c.about.openButton.style().set({position: "bottom-right", "shown": true});
+c.about.closeButton.style().set({position: "bottom-right", "shown": true});
+
+c.about.title.style().set({fontSize: "20px", fontWeight: "bold"});
+c.about.logo.style().set({width: "200px"});
+c.about.funding.style().set({textAlign: "left", stretch: "horizontal"});
+
 // Minified js-code for the background map
 function greyMap(){return[{featureType:"administrative",elementType:"labels.text.fill",stylers:[{visibility:"on"},{color:"#737373"}]},{featureType:"administrative.province",elementType:"geometry.stroke",stylers:[{invert_lightness:!0}]},{featureType:"landscape",elementType:"geometry.fill",stylers:[{visibility:"on"},{color:"#efefef"}]},{featureType:"poi",elementType:"geometry.fill",stylers:[{visibility:"on"},{color:"#dadada"}]},{featureType:"poi",elementType:"labels",stylers:[{visibility:"off"}]},{featureType:"poi",elementType:"labels.icon",stylers:[{visibility:"off"}]},{featureType:"road",elementType:"labels.text.fill",stylers:[{color:"#696969"}]},{featureType:"road",elementType:"labels.icon",stylers:[{visibility:"off"}]},{featureType:"road.highway",elementType:"geometry.fill",stylers:[{color:"#ffffff"}]},{featureType:"road.highway",elementType:"geometry.stroke",stylers:[{visibility:"on"},{color:"#b3b3b3"}]},{featureType:"road.arterial",elementType:"geometry.fill",stylers:[{color:"#ffffff"}]},{featureType:"road.arterial",elementType:"geometry.stroke",stylers:[{color:"#d6d6d6"}]},{featureType:"road.local",elementType:"geometry.fill",stylers:[{visibility:"on"},{color:"#ffffff"},{weight:1.8}]},{featureType:"road.local",elementType:"geometry.stroke",stylers:[{color:"#d7d7d7"}]},{featureType:"transit",elementType:"all",stylers:[{color:"#808080"},{visibility:"off"}]},{featureType:"water",elementType:"geometry.fill",stylers:[{color:"#d3d3d3"}]},{featureType:"water",elementType:"labels.text",stylers:[{color:"#737373"}]}]}
 
 /*******************************************************************************
  * Behaviors *
- ******************************************************************************/
+*******************************************************************************/
 
- var currentImage;  // global variable to store current image
- var compareImage;
- var aoi = m.vData.sup.fCol;  // default AOI
- 
- // Extract details from a clicked point
- function clearValueAtPointStats() {
-   Map.layers().set(imageLayerIndex + 1, null);
-   placeHolder.style().set("shown", true);
-   placeHolder.setValue(t.stats.valAtPoint.placeholder[ln]);
-   latLabel.style().set({"shown": false});
-   lonLabel.style().set({"shown": false});
-   meanLabel.style().set({"shown": false});
-   diffLabel.style().set({"shown": false});
- }
- 
- // Dynamically create panel breaks
- function createPanelBreaks(maxVal) {  
-   var panelBreaks = [];
-   for (var i = 0; i <= maxVal; ++i) {
-     panelBreaks[i] = ui.Panel(null, null, {
-       stretch: "horizontal",
-       height: "1px",
-       backgroundColor: "bbb",
-       margin: "8px 0px 8px 0px"
-     });
-   }
-   return panelBreaks;
- }
- 
- /* Timeline sliders ***********************************************************/
- 
- function updateStartSliderDate() {
-   c.timeline.start.panel.widgets().get(1).setDisabled(true);
- 
-   var dateRange = getMinMaxDate();  // min/max date for selected collection
-   var firstDate = ee.Date(dateRange.get("firstDate"));
-   var firstDateMillis = ee.Date(dateRange.get("firstDate")).millis();
-   var lastDate = ee.Date(dateRange.get("lastDate"));
-   var lastDateMillis = ee.Date(dateRange.get("lastDate")).millis();
- 
-   var selectedDate = lastDate.advance(-10, "day");
-   var selectedDateMillis = lastDateMillis;
- 
-   // check if selected date fall within possible date range, else force it
-   selectedDate = ee.Date(ee.Algorithms.If(
-     firstDateMillis.gt(selectedDateMillis),
-     firstDate,
-     selectedDate
-   ));
-   selectedDate = ee.Date(ee.Algorithms.If(
-     lastDateMillis.lt(selectedDateMillis),
-     lastDate,
-     selectedDate
-   ));
- 
-   var startDate = selectedDate;
-   var endDate = m.timeline.dateInfo.end.selected;
- 
-   currentImage = compositeImages(startDate, endDate);
-   Map.layers().set(
-     imageLayerIndex,
-     ui.Map.Layer(currentImage, c.thisData.visParams, null, true, imageOpacity)
-   );
- 
-   ee.Dictionary({
-     firstDate: firstDate.format(m.timeline.format),
-     lastDate: lastDate.format(m.timeline.format),
-     selectedDate: selectedDate.format(m.timeline.format)
-   }).evaluate(function (dates) {
-     var dateSelector = ui.DateSlider({
-       start: dates.firstDate,
-       end: dates.lastDate,
-       value: dates.selectedDate,
-       period: 1,
-       style: {stretch: "horizontal"},
-       onChange: startDateHandler
-     });
-     ui.url.set("startdate", dates.selectedDate);  // update date in url
-     m.timeline.dateInfo.start.selected = dates.selectedDate;
-     c.timeline.start.panel.widgets().set(1, dateSelector);
-   });
- }
- 
- function updateEndSliderDate() {
-   c.timeline.end.panel.widgets().get(1).setDisabled(true);
- 
-   var dateRange = getMinMaxDate();  // min/max date for selected collection
-   var firstDate = ee.Date(dateRange.get("firstDate"));
-   var firstDateMillis = ee.Date(dateRange.get("firstDate")).millis();
-   var lastDate = ee.Date(dateRange.get("lastDate"))
-     .advance(1, "day");
-   var lastDateMillis = ee.Date(dateRange.get("lastDate"))
-     .advance(1, "day")
-     .millis();
- 
-   var selectedDate = lastDate;
-   var selectedDateMillis = lastDateMillis;
- 
-   // check if selected date fall within possible date range, else force it
-   selectedDate = ee.Date(ee.Algorithms.If(
-     firstDateMillis.gt(selectedDateMillis),
-     firstDate,
-     selectedDate
-   ));
-   selectedDate = ee.Date(ee.Algorithms.If(
-     lastDateMillis.lt(selectedDateMillis),
-     lastDate,
-     selectedDate
-   ));
- 
- 
-   var startDate = m.timeline.dateInfo.start.selected;
-   var endDate = selectedDate;
- 
-   currentImage = compositeImages(startDate, endDate);
-   Map.layers().set(
-     imageLayerIndex,
-     ui.Map.Layer(currentImage, c.thisData.visParams, null, true, imageOpacity)
-   );
- 
-   ee.Dictionary({
-     firstDate: firstDate.format(m.timeline.format),
-     lastDate: lastDate.format(m.timeline.format),
-     selectedDate: selectedDate.format(m.timeline.format)
-   })
-     .evaluate(function (dates) {
-       var dateSelector = ui.DateSlider({
-         start: dates.firstDate,
-         end: dates.lastDate,
-         value: dates.selectedDate,
-         period: 1,
-         style: {stretch: "horizontal"},
-         onChange: endDateHandler
-       });
-       ui.url.set("enddate", dates.selectedDate);  // update date in url
-       m.timeline.dateInfo.end.selected = dates.selectedDate;
-       c.timeline.end.panel.widgets().set(1, dateSelector);
-     });
- }
- 
- /* Map Legend *****************************************************************/
- 
- // Color bar thumbnail image for use in legend
- function makeColorBarParams(palette) {
-   return {
-     bbox: [0, 0, 1, 0.1], dimensions: "100x10", format: "png",
-     min: 0,
-     max: 1,
-     palette: palette,
-   };
- }
- 
- // Color bar for the legend
- function makeLegend(params) {
-   var colorBar = ui.Thumbnail({
-     image: ee.Image.pixelLonLat().select(0),
-     params: makeColorBarParams(params.visParams.palette),
-     style: {stretch: "horizontal", margin: "0px 8px", maxHeight: "20px"},
-   });
- 
-   var minValLabel, maxValLabel, medValLabel;
- 
-   if (c.compare.state) {  // custom legend style for comparison mode
-     minValLabel = "< " + params.visParams.min;
-     maxValLabel = "> " + "+" + params.visParams.max;
-     medValLabel = params.visParams.mean + (" (region mean)");
-   } else {  // default legend style
-     minValLabel = c.thisData.visParams.min;
-     maxValLabel = params.visParams.max;
-     medValLabel = (
-       c.thisData.visParams.min + ((params.visParams.max - params.visParams.min)/2)
-     );
-   }
- 
-   // Create a panel with three numbers for the legend
-   var legendLabels = ui.Panel({
-     widgets: [
-       ui.Label(minValLabel, {margin: "4px 8px", fontSize: "12px"}), //
-       ui.Label(medValLabel, {
-         margin: "4px 8px",
-         textAlign: "center",
-         stretch: "horizontal",
-         fontSize: "12px"
-       }),
-       ui.Label(maxValLabel, {margin: "4px 8px", fontSize: "12px"})
-     ],
-     layout: ui.Panel.Layout.flow("horizontal")
-   });
- 
-   var legendTitle = ui.Label({
-     value: params.legendLabel,
-     style: {fontWeight: "bold", fontSize: "12px"}
-   });
- 
-   var legendPanel = ui.Panel([legendTitle, colorBar, legendLabels]);
-   c.controlPanel.widgets().set(c.legend.index, legendPanel);
- }
- 
- /* UI Handlers ****************************************************************/
- 
- function aoiIsRegionMode(checked) {
-   if (checked) {
-     aoi = m.vData.sup.fCol;
-     imageOpacity = regionOpacity;
-     refreshMap();
-     Map.centerObject(aoi, m.vData.zoom);
-     c.vData.municipSelector.setValue(null, false);
-     c.vData.provSelector.items().reset();
-     c.vData.provSelector.setDisabled(true);
-   } else {
-     imageOpacity = regionOpacity;
-   }
- }
- 
- function municipSelectorHandler(municipFP) {
-   c.vData.regCheckbox.setValue(false, false);
-   c.vData.provSelector.setDisabled(false);
-   c.vData.provSelector.setPlaceholder("Loading...");
-   c.vData.provSelector.items().reset();
- 
-   var municipProvinces = m.vData.inf.fCol.filterMetadata(
-     m.vData.sup.idField, "equals", municipFP
-   );
-   aoi = municipProvinces;
-   refreshMap();
-   Map.centerObject(aoi);
- 
-   var provinceDict = makeNameIdDict(
-     municipProvinces, m.vData.inf.nameField, m.vData.inf.idField
-   );
-   provinceDict.evaluate(function (provinces) {
-     var items = [];
-     for (var key in provinces) {
-       items.push({"label": key, "value": provinces[key]});
-     }
-     c.vData.provSelector.items().reset(items);
-     c.vData.provSelector.setPlaceholder(t.aoi.selectAdmInf[ln]);
-   });
- }
- 
- function provinceSelectorHandler(provinceGEOID) {
- 
-   var province = m.vData.inf.fCol.filterMetadata(
-     m.vData.inf.idField, "equals", provinceGEOID
-   );
-   aoi = province;
-   refreshMap();
-   Map.centerObject(aoi);
- }
- 
- function dataSelectorHandler(e) {
-   c.download.urlLabel.style().set({shown: false});
- 
-   if (c.compare.state) {  // turn comparison mode off when changing datasets
-     c.compare.checkbox.setValue(false, false);
-     c.compare.state = false;
-     c.regionMeanLabel.setValue("");
-     compareModePanel.style().set({shown: false});
-     c.download.urlLabel.style().set({shown: false});
-   }
- 
-   var datasetFromClick = c.dataSelector.getValue();
-   var dataTypeFromClick = c.colSelector.getValue();
-   ui.url.set("dataset", datasetFromClick);
-   ui.url.set("datatype", dataTypeFromClick);
- 
-   c.thisData = m.rData[datasetFromClick];
-   c.thisData.colId = c.thisData[dataTypeFromClick];
- 
-   ui.url.set("min", c.thisData.visParams.min);
-   ui.url.set("max", c.thisData.visParams.max);
- 
-   // Update map data
-   updateStartSliderDate();
-   updateEndSliderDate();
- 
-   // Update legend elements
-   makeLegend(c.thisData);
- 
-   // Reset "Value at point"
-   clearValueAtPointStats();
- }
- 
- function refreshMap() {  // toDo: use a global image and only clip it to aoi
-   var startDate = m.timeline.dateInfo.start.selected;
-   var endDate = m.timeline.dateInfo.end.selected;
-   currentImage = compositeImages(startDate, endDate);
-   Map.layers().set(aoiLayerIndex, ui.Map.Layer(aoi.style(aoiStyle)));
-   if (c.compare.state) {
-     makeComparison();
-   } else {
-     Map.layers().set(imageLayerIndex, ui.Map.Layer(currentImage, c.thisData.visParams, null, true, imageOpacity));
-   }
- }
- 
- function updateDate(startOrEnd) {
-   var panel, dateUrlTag, dateInfoDate;
- 
-   if (startOrEnd == "start date") {
-     panel = c.timeline.start.panel;
-     dateUrlTag = "startdate";
-   } else if (startOrEnd == "end date") {
-     panel = c.timeline.end.panel;
-     dateUrlTag = "enddate";
-   }
- 
-   var selectedDate = ee.Date(ee.List(panel.widgets().get(1).getValue()).get(0));
-   selectedDate.format(m.timeline.format).evaluate(function (date) {
-     ui.url.set(dateUrlTag, date);
- 
-     if (startOrEnd == "start date") {
-       m.timeline.dateInfo.start.selected = date;
-     } else {
-       m.timeline.dateInfo.end.selected = date;
-     }
- 
-     var startDate = m.timeline.dateInfo.start.selected;
-     var endDate = m.timeline.dateInfo.end.selected;
- 
-     currentImage = compositeImages(startDate, endDate);
- 
-     if (c.compare.state) {
-       makeComparison();
-     } else {
-       Map.layers().set(imageLayerIndex, ui.Map.Layer(currentImage, c.thisData.visParams, null, true, imageOpacity));
-     }
-   });
- }
- 
- function startDateHandler() {
-   updateDate("start date");
-   c.download.urlLabel.style().set({shown: false});
- }
- 
- function endDateHandler() {
-   updateDate("end date");
-   c.download.urlLabel.style().set({shown: false});
- }
- 
- function modeCheckboxHandler(checked) {
-   c.compare.state = !c.compare.state;
-   print("Comparison: " + c.compare.state);
- 
-   if (checked) {
-     compareModePanel.style().set({shown: true});
-     makeComparison();
-   } else {
-     refreshMap();
-     c.regionMeanLabel.setValue("");
-     compareModePanel.style().set({shown: false});
-     c.download.urlLabel.style().set({shown: false});
-   }
-   clearValueAtPointStats();
- }
- 
- function meanMultiplierHandler(value) {
-   meanMultiplier = value;
-   comparisonInfo.visParams.min = (-1 * meanMultiplier * comparisonInfo.visParams.mean).toFixed(1);
-   comparisonInfo.visParams.max = (1 * meanMultiplier * comparisonInfo.visParams.mean).toFixed(1);
-   makeLegend(comparisonInfo);
-   Map.layers().set(
-     imageLayerIndex,
-     ui.Map.Layer(compareImage, comparisonInfo.visParams, null, true, imageOpacity)
-   );
- }
- 
- function exportButtonHandler() {
-   c.download.urlLabel.style().set({
-     fontWeight: "bold",
-     color: "#ea4f4d",
-     shown: true
-   });
-   c.download.urlLabel.setValue(t.export.placeholder[ln]).setUrl("");
-   computeExports();
- }
- 
- Map.onClick(function (coords) {
-   clearValueAtPointStats();
-   placeHolder.style().set("shown", true);
-   placeHolder.setValue(t.stats.valAtPoint.placeholder[ln]);
- 
-   var latitude = t.stats.lat[ln] + coords.lat.toFixed(4);
-   var longitude = t.stats.lon[ln] + coords.lon.toFixed(4);
-   var clickPoint = ee.Geometry.Point(coords.lon, coords.lat);
-   if (showQueryPoint) {
-     Map.layers().set(imageLayerIndex + 1, ui.Map.Layer(clickPoint, queryPointStyle));
-   }
- 
-   //We need the layer casted to image to be able to use reduceRegion on it
-   var mapValue = currentImage.reduceRegion(ee.Reducer.mean(), clickPoint, 100)
-     .get(c.thisData.band + "_mean")
-     //Asynchronous Event for the query
-     .evaluate(function (val) {
-       if (val === null) {
-         val = t.stats.nodata[ln];
-       } else {
-         val = val.toFixed(4);
-       }
-       var mapvalueText = c.thisData.unitsLabel + ": " + val;
-       placeHolder.style().set("shown", false);
-       latLabel.setValue(latitude).style().set({"shown": true});
-       lonLabel.setValue(longitude).style().set({"shown": true});
-       meanLabel.setValue(mapvalueText).style().set({"shown": true});
-     });
- 
-   if (c.compare.state) {
-     var diffValue = compareImage.reduceRegion(ee.Reducer.mean(), clickPoint, 100)
-       .get("difference")//.aside(print)
-       //Asynchronous Event for the query
-       .evaluate(function (val) {
-         if (val === null) {
-           val = "no valid measurements";
-         } else {
-           val = val.toFixed(4);
-         }
-         var diffValueText = t.stats.diff.label[0][ln] + val;
-         diffLabel.setValue(diffValueText).style().set({"shown": true});
-       });
-   }
- });
- 
- /* Data processors ************************************************************/
- 
- // Get min and max dates for dataset
- function getMinMaxDate() {
-   var col = ee.ImageCollection(c.thisData.colId);
- 
-   var dataDateRange = ee.Dictionary(col.reduceColumns(
-     {reducer: ee.Reducer.minMax(), selectors: ["system:time_start"]}));
- 
-   var firstDate = ee.Date(dataDateRange.get("min"));
-   var lastDate = ee.Date(dataDateRange.get("max"));
-   return ee.Dictionary({firstDate: firstDate, lastDate: lastDate});
- }
- 
- function compositeImages(startDate, endDate) {
-   var dateFilter = ee.Filter.date(startDate, endDate);
-   var col = ee.ImageCollection(c.thisData.colId).filter(dateFilter);
- 
-   return col.select(c.thisData.band).reduce(ee.Reducer.mean())
-     .multiply(c.thisData.scalar)
-     .clip(aoi);
- }
- 
- function getRegionMean(img, bandName, aoi, scale) {
-   var regionMeanValue = img.reduceRegion({
-     reducer: ee.Reducer.mean(),
-     geometry: aoi,
-     scale: scale,
-   }).get(bandName + "_mean");
- 
-   return regionMeanValue;
- }
- 
- function makeComparison() {
-   c.regionMeanLabel
-     .setValue(t.rData.compare.placeholder[ln])
-     .style().set({fontWeight: "bold", color: "green"});
-   c.meanMultiplierSlider.setDisabled(true);  // while (re)computing mean
- 
-   var regionMean = getRegionMean(currentImage, c.thisData.band, aoi, scale);
- 
-   regionMean.evaluate(function (val) {
- 
-     var meanImage = ee.Image(currentImage).rename("difference");
-     compareImage = meanImage.subtract(ee.Image(val)).updateMask(currentImage.mask());
- 
-     comparisonInfo.visParams.min = (-1 * meanMultiplier * val).toFixed(1);
-     comparisonInfo.visParams.max = (1 * meanMultiplier * val).toFixed(1);
-     comparisonInfo.visParams.mean = val.toFixed(1);
-     comparisonInfo.legendLabel = c.thisData.legendLabel + t.rData.compare.note[ln];
- 
-     makeLegend(comparisonInfo);
- 
-     Map.layers().set(imageLayerIndex, ui.Map.Layer(compareImage, comparisonInfo.visParams, null, true, imageOpacity));
- 
-     c.regionMeanLabel
-       .setValue(t.stats.territoryMean[ln] + val.toFixed(1))
-       .style().set({fontWeight: "normal", color: "black"});
-     c.meanMultiplierSlider.setDisabled(false);
-   });
- }
- 
- function aggregateStats(localMeanImage, regionMeanValue, regionName) {
-   var regionMeanImage = ee.Image(ee.Number(regionMeanValue));
-   var differenceImage = currentImage.subtract(regionMeanImage);
- 
-   var exportImage = localMeanImage.reproject("EPSG:4326", null, scale);
-   var exportCompareImage = differenceImage.reproject("EPSG:4326", null, scale);
- 
-   // generate a new image containing lat/lon of the pixel and reproject it to NO2 projection
-   var coordsImage = ee.Image.pixelLonLat().reproject(exportImage.projection());
-   var joinedImage = coordsImage.addBands(exportImage).addBands(exportCompareImage);
- 
-   var valuesList = joinedImage.reduceRegion({
-     reducer: ee.Reducer.toList(4),
-     scale: scale,
-     geometry: aoi,
-     maxPixels: 1e13,
-   }).values().get(0);
- 
-   valuesList = ee.List(valuesList);  // Cast valuesList
- 
-   var diffLabel = [
-     t.stats.diff.label[1][ln],
-     regionName.replace(/_/g, ", "),
-     t.stats.diff.label[2][ln],
-     c.thisData.unitsLabel
-   ].join(" ");
-   print(diffLabel);
-   var meanLabel = t.stats.diff.mean[ln] + c.thisData.unitsLabel;
- 
-   var exportFeatures = ee.FeatureCollection(valuesList.map(function (el) {
-     el = ee.List(el);  // cast every element of the list
-     var geom = ee.Geometry.Point([ee.Number(el.get(0)), ee.Number(el.get(1))]);
- 
-     var attributes = {};
-     attributes[diffLabel] = ee.Number(el.get(3));
-     attributes[meanLabel] = ee.Number(el.get(2));
-     attributes.latitude = ee.Number(el.get(1)).format("%.2f");
-     attributes.longitude = ee.Number(el.get(0)).format("%.2f");
- 
-     return ee.Feature(geom, attributes);
-   }));
- 
-   return exportFeatures;
- }
- 
- 
- function computeExports() {
-   var regionMeanValue = getRegionMean(currentImage, c.thisData.band, aoi, scale);
- 
-   var provinceName = getLabelByValue(c.vData.provSelector, c.vData.provSelector.getValue());
-   var municipName = getLabelByValue(c.vData.municipSelector, c.vData.municipSelector.getValue());
-   var regionNamePrefix = [provinceName, municipName].filter(Boolean).join("_");
- 
-   var exportFeatures = ee.FeatureCollection(aggregateStats(currentImage, regionMeanValue, regionNamePrefix))
-     .select([".*"], null, false);  // drop .geo column with geometry
- 
- 
-   // returns download URL of the image for the aoi.
-   exportFeatures.getDownloadURL({
-     format: "csv",
-     filename: [regionNamePrefix, c.dataSelector.getValue(), c.colSelector.getValue(), ui.url.get("startdate"), "-", ui.url.get("enddate")].join("_"),
-     callback: setDownloadUrl  // pass url to setDownloadUrl when result is ready
-   });
- }
- 
- function makeNameIdDict(featureColl, nameAttribute, idAttribute) {
-   var names = ee.List(featureColl.aggregate_array(nameAttribute));
-   var ids = ee.List(featureColl.aggregate_array(idAttribute));
-   var nameIdDict = ee.Dictionary.fromLists(names, ids);
-   return nameIdDict;
- }
- 
- function setMunicipalities() {
-   var municipDict = makeNameIdDict(m.vData.sup.fCol, m.vData.sup.nameField, m.vData.sup.idField);
-   municipDict.evaluate(function (municips) {
-     var items = [];
-     for (var key in municips) {
-       items.push({"label": key, "value": municips[key]});
-     }
-     c.vData.municipSelector.items().reset(items);
-     c.vData.municipSelector.setValue(m.vData.provCode);  // setting default province
-   });
- }
- 
- function getLabelByValue(selector, value) {  // get selector label by value
-   var items = selector.items().getJsArray();
-   for (var x = 0; x < items.length; x++) {
-     if (items[x].value == value) {
-       return items[x].label;
-     }
-   }
-   return null;  // if selector is empty or does not contain the requested value
- }
- 
- function setDownloadUrl(url) {
-   c.download.urlLabel.setValue(t.export.downloadButton[ln]);
-   c.download.urlLabel.setUrl(url);
- }
+var currentImage;  // global variable to store current image
+var compareImage;
+var aoi = m.vData.sup.fCol;  // default AOI
+
+// Extract details from a clicked point
+function clearValueAtPointStats() {
+  Map.layers().set(m.imageLayerIndex + 1, null);
+  c.inspector.placeholder.style().set("shown", true);
+  c.inspector.placeholder.setValue(t.stats.valAtPoint.placeholder[ln]);
+  c.stats.latLabel.style().set({"shown": false});
+  c.stats.lonLabel.style().set({"shown": false});
+  c.stats.meanLabel.style().set({"shown": false});
+  c.stats.diffLabel.style().set({"shown": false});
+}
+
+// Dynamically create panel breaks
+function createPanelBreaks(maxVal) {  
+  var panelBreaks = [];
+  for (var i = 0; i <= maxVal; ++i) {
+    panelBreaks[i] = ui.Panel(null, null, {
+      stretch: "horizontal",
+      height: "1px",
+      backgroundColor: "bbb",
+      margin: "8px 0px 8px 0px"
+    });
+  }
+  return panelBreaks;
+}
+
+/* Timeline sliders ***********************************************************/
+
+function updateStartSliderDate() {
+  c.timeline.start.panel.widgets().get(1).setDisabled(true);
+
+  var dateRange = getMinMaxDate();  // min/max date for selected collection
+  var firstDate = ee.Date(dateRange.get("firstDate"));
+  var firstDateMillis = ee.Date(dateRange.get("firstDate")).millis();
+  var lastDate = ee.Date(dateRange.get("lastDate"));
+  var lastDateMillis = ee.Date(dateRange.get("lastDate")).millis();
+
+  var selectedDate = lastDate.advance(-10, "day");
+  var selectedDateMillis = lastDateMillis;
+
+  // check if selected date fall within possible date range, else force it
+  selectedDate = ee.Date(ee.Algorithms.If(
+    firstDateMillis.gt(selectedDateMillis),
+    firstDate,
+    selectedDate
+  ));
+  selectedDate = ee.Date(ee.Algorithms.If(
+    lastDateMillis.lt(selectedDateMillis),
+    lastDate,
+    selectedDate
+  ));
+
+  var startDate = selectedDate;
+  var endDate = m.timeline.dateInfo.end.selected;
+
+  currentImage = compositeImages(startDate, endDate);
+  Map.layers().set(
+    m.imageLayerIndex,
+    ui.Map.Layer(currentImage, c.thisData.visParams, null, true, s.imageOpacity)
+  );
+
+  ee.Dictionary({
+    firstDate: firstDate.format(m.timeline.format),
+    lastDate: lastDate.format(m.timeline.format),
+    selectedDate: selectedDate.format(m.timeline.format)
+  }).evaluate(function (dates) {
+    var dateSelector = ui.DateSlider({
+      start: dates.firstDate,
+      end: dates.lastDate,
+      value: dates.selectedDate,
+      period: 1,
+      style: {stretch: "horizontal"},
+      onChange: startDateHandler
+    });
+    ui.url.set("startdate", dates.selectedDate);  // update date in url
+    m.timeline.dateInfo.start.selected = dates.selectedDate;
+    c.timeline.start.panel.widgets().set(1, dateSelector);
+  });
+}
+
+function updateEndSliderDate() {
+  c.timeline.end.panel.widgets().get(1).setDisabled(true);
+
+  var dateRange = getMinMaxDate();  // min/max date for selected collection
+  var firstDate = ee.Date(dateRange.get("firstDate"));
+  var firstDateMillis = ee.Date(dateRange.get("firstDate")).millis();
+  var lastDate = ee.Date(dateRange.get("lastDate"))
+    .advance(1, "day");
+  var lastDateMillis = ee.Date(dateRange.get("lastDate"))
+    .advance(1, "day")
+    .millis();
+
+  var selectedDate = lastDate;
+  var selectedDateMillis = lastDateMillis;
+
+  // check if selected date fall within possible date range, else force it
+  selectedDate = ee.Date(ee.Algorithms.If(
+    firstDateMillis.gt(selectedDateMillis),
+    firstDate,
+    selectedDate
+  ));
+  selectedDate = ee.Date(ee.Algorithms.If(
+    lastDateMillis.lt(selectedDateMillis),
+    lastDate,
+    selectedDate
+  ));
+
+
+  var startDate = m.timeline.dateInfo.start.selected;
+  var endDate = selectedDate;
+
+  currentImage = compositeImages(startDate, endDate);
+  Map.layers().set(
+    m.imageLayerIndex,
+    ui.Map.Layer(currentImage, c.thisData.visParams, null, true, s.imageOpacity)
+  );
+
+  ee.Dictionary({
+    firstDate: firstDate.format(m.timeline.format),
+    lastDate: lastDate.format(m.timeline.format),
+    selectedDate: selectedDate.format(m.timeline.format)
+  })
+    .evaluate(function (dates) {
+      var dateSelector = ui.DateSlider({
+        start: dates.firstDate,
+        end: dates.lastDate,
+        value: dates.selectedDate,
+        period: 1,
+        style: {stretch: "horizontal"},
+        onChange: endDateHandler
+      });
+      ui.url.set("enddate", dates.selectedDate);  // update date in url
+      m.timeline.dateInfo.end.selected = dates.selectedDate;
+      c.timeline.end.panel.widgets().set(1, dateSelector);
+    });
+}
+
+/* Map Legend *****************************************************************/
+
+// Color bar thumbnail image for use in legend
+function makeColorBarParams(palette) {
+  return {
+    bbox: [0, 0, 1, 0.1], dimensions: "100x10", format: "png",
+    min: 0,
+    max: 1,
+    palette: palette,
+  };
+}
+
+// Color bar for the legend
+function makeLegend(params) {
+  var colorBar = ui.Thumbnail({
+    image: ee.Image.pixelLonLat().select(0),
+    params: makeColorBarParams(params.visParams.palette),
+    style: {stretch: "horizontal", margin: "0px 8px", maxHeight: "20px"},
+  });
+
+  var minValLabel, maxValLabel, medValLabel;
+
+  if (c.compare.state) {  // custom legend style for comparison mode
+    minValLabel = "< " + params.visParams.min;
+    maxValLabel = "> " + "+" + params.visParams.max;
+    medValLabel = params.visParams.mean + (" (region mean)");
+  } else {  // default legend style
+    minValLabel = c.thisData.visParams.min;
+    maxValLabel = params.visParams.max;
+    medValLabel = (
+      c.thisData.visParams.min + ((params.visParams.max - params.visParams.min)/2)
+    );
+  }
+
+  // Create a panel with three numbers for the legend
+  var legendLabels = ui.Panel({
+    widgets: [
+      ui.Label(minValLabel, {margin: "4px 8px", fontSize: "12px"}), //
+      ui.Label(medValLabel, {
+        margin: "4px 8px",
+        textAlign: "center",
+        stretch: "horizontal",
+        fontSize: "12px"
+      }),
+      ui.Label(maxValLabel, {margin: "4px 8px", fontSize: "12px"})
+    ],
+    layout: ui.Panel.Layout.flow("horizontal")
+  });
+
+  var legendTitle = ui.Label({
+    value: params.legendLabel,
+    style: {fontWeight: "bold", fontSize: "12px"}
+  });
+
+  var legendPanel = ui.Panel([legendTitle, colorBar, legendLabels]);
+  c.controlPanel.widgets().set(c.legend.index, legendPanel);
+}
+
+/* UI Handlers ****************************************************************/
+
+function aoiIsRegionMode(checked) {
+  if (checked) {
+    aoi = m.vData.sup.fCol;
+    s.imageOpacity = s.imageOpacity;
+    refreshMap();
+    Map.centerObject(aoi, m.vData.zoom);
+    c.vData.municipSelector.setValue(null, false);
+    c.vData.provSelector.items().reset();
+    c.vData.provSelector.setDisabled(true);
+  } else {
+    s.imageOpacity = s.imageOpacity;
+  }
+}
+
+function municipSelectorHandler(municipFP) {
+  c.vData.regCheckbox.setValue(false, false);
+  c.vData.provSelector.setDisabled(false);
+  c.vData.provSelector.setPlaceholder("Loading...");
+  c.vData.provSelector.items().reset();
+
+  var municipProvinces = m.vData.inf.fCol.filterMetadata(
+    m.vData.sup.idField, "equals", municipFP
+  );
+  aoi = municipProvinces;
+  refreshMap();
+  Map.centerObject(aoi);
+
+  var provinceDict = makeNameIdDict(
+    municipProvinces, m.vData.inf.nameField, m.vData.inf.idField
+  );
+  provinceDict.evaluate(function (provinces) {
+    var items = [];
+    for (var key in provinces) {
+      items.push({"label": key, "value": provinces[key]});
+    }
+    c.vData.provSelector.items().reset(items);
+    c.vData.provSelector.setPlaceholder(t.aoi.selectAdmInf[ln]);
+  });
+}
+
+function provinceSelectorHandler(provinceGEOID) {
+
+  var province = m.vData.inf.fCol.filterMetadata(
+    m.vData.inf.idField, "equals", provinceGEOID
+  );
+  aoi = province;
+  refreshMap();
+  Map.centerObject(aoi);
+}
+
+function dataSelectorHandler(e) {
+  c.download.urlLabel.style().set({shown: false});
+
+  if (c.compare.state) {  // turn comparison mode off when changing datasets
+    c.compare.checkbox.setValue(false, false);
+    c.compare.state = false;
+    c.regionMeanLabel.setValue("");
+    c.compareModePanel.style().set({shown: false});
+    c.download.urlLabel.style().set({shown: false});
+  }
+
+  var datasetFromClick = c.dataSelector.getValue();
+  var dataTypeFromClick = c.colSelector.getValue();
+  ui.url.set("dataset", datasetFromClick);
+  ui.url.set("datatype", dataTypeFromClick);
+
+  c.thisData = m.rData[datasetFromClick];
+  c.thisData.colId = c.thisData[dataTypeFromClick];
+
+  ui.url.set("min", c.thisData.visParams.min);
+  ui.url.set("max", c.thisData.visParams.max);
+
+  // Update map data
+  updateStartSliderDate();
+  updateEndSliderDate();
+
+  // Update legend elements
+  makeLegend(c.thisData);
+
+  // Reset "Value at point"
+  clearValueAtPointStats();
+}
+
+function refreshMap() {  // toDo: use a global image and only clip it to aoi
+  var startDate = m.timeline.dateInfo.start.selected;
+  var endDate = m.timeline.dateInfo.end.selected;
+  currentImage = compositeImages(startDate, endDate);
+  Map.layers().set(m.aoiLayerIndex, ui.Map.Layer(aoi.style(s.aoiStyle)));
+  if (c.compare.state) {
+    makeComparison();
+  } else {
+    Map.layers().set(m.imageLayerIndex, ui.Map.Layer(currentImage, c.thisData.visParams, null, true, s.imageOpacity));
+  }
+}
+
+function updateDate(startOrEnd) {
+  var panel, dateUrlTag, dateInfoDate;
+
+  if (startOrEnd == "start date") {
+    panel = c.timeline.start.panel;
+    dateUrlTag = "startdate";
+  } else if (startOrEnd == "end date") {
+    panel = c.timeline.end.panel;
+    dateUrlTag = "enddate";
+  }
+
+  var selectedDate = ee.Date(ee.List(panel.widgets().get(1).getValue()).get(0));
+  selectedDate.format(m.timeline.format).evaluate(function (date) {
+    ui.url.set(dateUrlTag, date);
+
+    if (startOrEnd == "start date") {
+      m.timeline.dateInfo.start.selected = date;
+    } else {
+      m.timeline.dateInfo.end.selected = date;
+    }
+
+    var startDate = m.timeline.dateInfo.start.selected;
+    var endDate = m.timeline.dateInfo.end.selected;
+
+    currentImage = compositeImages(startDate, endDate);
+
+    if (c.compare.state) {
+      makeComparison();
+    } else {
+      Map.layers().set(m.imageLayerIndex, ui.Map.Layer(currentImage, c.thisData.visParams, null, true, s.imageOpacity));
+    }
+  });
+}
+
+function startDateHandler() {
+  updateDate("start date");
+  c.download.urlLabel.style().set({shown: false});
+}
+
+function endDateHandler() {
+  updateDate("end date");
+  c.download.urlLabel.style().set({shown: false});
+}
+
+function modeCheckboxHandler(checked) {
+  c.compare.state = !c.compare.state;
+  print("Comparison: " + c.compare.state);
+
+  if (checked) {
+    c.compareModePanel.style().set({shown: true});
+    makeComparison();
+  } else {
+    refreshMap();
+    c.regionMeanLabel.setValue("");
+    c.compareModePanel.style().set({shown: false});
+    c.download.urlLabel.style().set({shown: false});
+  }
+  clearValueAtPointStats();
+}
+
+function meanMultiplierHandler(value) {
+  c.url.meanMultiplier = value;
+  m.comparisonInfo.visParams.min = (-1 * c.url.meanMultiplier * m.comparisonInfo.visParams.mean).toFixed(1);
+  m.comparisonInfo.visParams.max = (1 * c.url.meanMultiplier * m.comparisonInfo.visParams.mean).toFixed(1);
+  makeLegend(m.comparisonInfo);
+  Map.layers().set(
+    m.imageLayerIndex,
+    ui.Map.Layer(compareImage, m.comparisonInfo.visParams, null, true, s.imageOpacity)
+  );
+}
+
+function exportButtonHandler() {
+  c.download.urlLabel.style().set({
+    fontWeight: "bold",
+    color: "#ea4f4d",
+    shown: true
+  });
+  c.download.urlLabel.setValue(t.export.placeholder[ln]).setUrl("");
+  computeExports();
+}
+
+Map.onClick(function (coords) {
+  clearValueAtPointStats();
+  c.inspector.placeholder.style().set("shown", true);
+  c.inspector.placeholder.setValue(t.stats.valAtPoint.placeholder[ln]);
+
+  var latitude = t.stats.lat[ln] + coords.lat.toFixed(4);
+  var longitude = t.stats.lon[ln] + coords.lon.toFixed(4);
+  var clickPoint = ee.Geometry.Point(coords.lon, coords.lat);
+  if (s.showQueryPoint) {
+    Map.layers().set(m.imageLayerIndex + 1, ui.Map.Layer(clickPoint, s.queryPointStyle));
+  }
+
+  //We need the layer casted to image to be able to use reduceRegion on it
+  var mapValue = currentImage.reduceRegion(ee.Reducer.mean(), clickPoint, 100)
+    .get(c.thisData.band + "_mean")
+    //Asynchronous Event for the query
+    .evaluate(function (val) {
+      if (val === null) {
+        val = t.stats.nodata[ln];
+      } else {
+        val = val.toFixed(4);
+      }
+      var mapvalueText = c.thisData.unitsLabel + ": " + val;
+      c.inspector.placeholder.style().set("shown", false);
+      c.stats.latLabel.setValue(latitude).style().set({"shown": true});
+      c.stats.lonLabel.setValue(longitude).style().set({"shown": true});
+      c.stats.meanLabel.setValue(mapvalueText).style().set({"shown": true});
+    });
+
+  if (c.compare.state) {
+    var diffValue = compareImage.reduceRegion(ee.Reducer.mean(), clickPoint, 100)
+      .get("difference")//.aside(print)
+      //Asynchronous Event for the query
+      .evaluate(function (val) {
+        if (val === null) {
+          val = "no valid measurements";
+        } else {
+          val = val.toFixed(4);
+        }
+        var diffValueText = t.stats.diff.label[0][ln] + val;
+        c.stats.diffLabel.setValue(diffValueText).style().set({"shown": true});
+      });
+  }
+});
+
+/* Data processors ************************************************************/
+
+// Get min and max dates for dataset
+function getMinMaxDate() {
+  var col = ee.ImageCollection(c.thisData.colId);
+
+  var dataDateRange = ee.Dictionary(col.reduceColumns(
+    {reducer: ee.Reducer.minMax(), selectors: ["system:time_start"]}));
+
+  var firstDate = ee.Date(dataDateRange.get("min"));
+  var lastDate = ee.Date(dataDateRange.get("max"));
+  return ee.Dictionary({firstDate: firstDate, lastDate: lastDate});
+}
+
+function compositeImages(startDate, endDate) {
+  var dateFilter = ee.Filter.date(startDate, endDate);
+  var col = ee.ImageCollection(c.thisData.colId).filter(dateFilter);
+
+  return col.select(c.thisData.band).reduce(ee.Reducer.mean())
+    .multiply(c.thisData.scalar)
+    .clip(aoi);
+}
+
+function getRegionMean(img, bandName, aoi, scale) {
+  var regionMeanValue = img.reduceRegion({
+    reducer: ee.Reducer.mean(),
+    geometry: aoi,
+    scale: scale,
+  }).get(bandName + "_mean");
+
+  return regionMeanValue;
+}
+
+function makeComparison() {
+  c.regionMeanLabel
+    .setValue(t.rData.compare.placeholder[ln])
+    .style().set({fontWeight: "bold", color: "green"});
+  c.meanMultiplierSlider.setDisabled(true);  // while (re)computing mean
+
+  var regionMean = getRegionMean(currentImage, c.thisData.band, aoi, m.scale);
+
+  regionMean.evaluate(function (val) {
+
+    var meanImage = ee.Image(currentImage).rename("difference");
+    compareImage = meanImage.subtract(ee.Image(val)).updateMask(currentImage.mask());
+
+    m.comparisonInfo.visParams.min = (-1 * c.url.meanMultiplier * val).toFixed(1);
+    m.comparisonInfo.visParams.max = (1 * c.url.meanMultiplier * val).toFixed(1);
+    m.comparisonInfo.visParams.mean = val.toFixed(1);
+    m.comparisonInfo.legendLabel = c.thisData.legendLabel + t.rData.compare.note[ln];
+
+    makeLegend(m.comparisonInfo);
+
+    Map.layers().set(m.imageLayerIndex, ui.Map.Layer(compareImage, m.comparisonInfo.visParams, null, true, s.imageOpacity));
+
+    c.regionMeanLabel
+      .setValue(t.stats.territoryMean[ln] + val.toFixed(1))
+      .style().set({fontWeight: "normal", color: "black"});
+    c.meanMultiplierSlider.setDisabled(false);
+  });
+}
+
+function aggregateStats(localMeanImage, regionMeanValue, regionName) {
+  var regionMeanImage = ee.Image(ee.Number(regionMeanValue));
+  var differenceImage = currentImage.subtract(regionMeanImage);
+
+  var exportImage = localMeanImage.reproject("EPSG:4326", null, m.scale);
+  var exportCompareImage = differenceImage.reproject("EPSG:4326", null, m.scale);
+
+  // generate a new image containing lat/lon of the pixel and reproject it to NO2 projection
+  var coordsImage = ee.Image.pixelLonLat().reproject(exportImage.projection());
+  var joinedImage = coordsImage.addBands(exportImage).addBands(exportCompareImage);
+
+  var valuesList = joinedImage.reduceRegion({
+    reducer: ee.Reducer.toList(4),
+    scale: m.scale,
+    geometry: aoi,
+    maxPixels: 1e13,
+  }).values().get(0);
+
+  valuesList = ee.List(valuesList);  // Cast valuesList
+
+  var diffLabel = [
+    t.stats.diff.label[1][ln],
+    regionName.replace(/_/g, ", "),
+    t.stats.diff.label[2][ln],
+    c.thisData.unitsLabel
+  ].join(" ");
+  print(diffLabel);
+  var meanLabel = t.stats.diff.mean[ln] + c.thisData.unitsLabel;
+
+  var exportFeatures = ee.FeatureCollection(valuesList.map(function (el) {
+    el = ee.List(el);  // cast every element of the list
+    var geom = ee.Geometry.Point([ee.Number(el.get(0)), ee.Number(el.get(1))]);
+
+    var attributes = {};
+    attributes[diffLabel] = ee.Number(el.get(3));
+    attributes[meanLabel] = ee.Number(el.get(2));
+    attributes.latitude = ee.Number(el.get(1)).format("%.2f");
+    attributes.longitude = ee.Number(el.get(0)).format("%.2f");
+
+    return ee.Feature(geom, attributes);
+  }));
+
+  return exportFeatures;
+}
+
+function computeExports() {
+  var regionMeanValue = getRegionMean(currentImage, c.thisData.band, aoi, m.scale);
+
+  var provinceName = getLabelByValue(c.vData.provSelector, c.vData.provSelector.getValue());
+  var municipName = getLabelByValue(c.vData.municipSelector, c.vData.municipSelector.getValue());
+  var regionNamePrefix = [provinceName, municipName].filter(Boolean).join("_");
+
+  var exportFeatures = ee.FeatureCollection(aggregateStats(currentImage, regionMeanValue, regionNamePrefix))
+    .select([".*"], null, false);  // drop .geo column with geometry
+
+  // returns download URL of the image for the aoi.
+  exportFeatures.getDownloadURL({
+    format: "csv",
+    filename: [regionNamePrefix, c.dataSelector.getValue(), c.colSelector.getValue(), ui.url.get("startdate"), "-", ui.url.get("enddate")].join("_"),
+    callback: setDownloadUrl  // pass url to setDownloadUrl when result is ready
+  });
+}
+
+function makeNameIdDict(featureColl, nameAttribute, idAttribute) {
+  var names = ee.List(featureColl.aggregate_array(nameAttribute));
+  var ids = ee.List(featureColl.aggregate_array(idAttribute));
+  var nameIdDict = ee.Dictionary.fromLists(names, ids);
+  return nameIdDict;
+}
+
+function setMunicipalities() {
+  var municipDict = makeNameIdDict(m.vData.sup.fCol, m.vData.sup.nameField, m.vData.sup.idField);
+  municipDict.evaluate(function (municips) {
+    var items = [];
+    for (var key in municips) {
+      items.push({"label": key, "value": municips[key]});
+    }
+    c.vData.municipSelector.items().reset(items);
+    c.vData.municipSelector.setValue(m.vData.provCode);  // setting default province
+  });
+}
+
+function getLabelByValue(selector, value) {  // get selector label by value
+  var items = selector.items().getJsArray();
+  for (var x = 0; x < items.length; x++) {
+    if (items[x].value == value) {
+      return items[x].label;
+    }
+  }
+  return null;  // if selector is empty or does not contain the requested value
+}
+
+function setDownloadUrl(url) {
+  c.download.urlLabel.setValue(t.export.downloadButton[ln]);
+  c.download.urlLabel.setUrl(url);
+}
 
 /*******************************************************************************
  * Initialize *
@@ -1420,9 +1481,6 @@ Map.onChangeBounds(function (e) {
   ui.url.set("zoom", e.zoom);
 });
 
-ui.root.insert(0, c.controlPanel);
-Map.add(panelOpenButton);
-
 // Update map data
 updateStartSliderDate();
 updateEndSliderDate();
@@ -1432,4 +1490,4 @@ c.download.button.setDisabled(false);  // mean image is ready, so enable export
 makeLegend(c.thisData);
 
 // Add AOI
-Map.layers().set(aoiLayerIndex, ui.Map.Layer(aoi.style(aoiStyle)));
+Map.layers().set(m.aoiLayerIndex, ui.Map.Layer(aoi.style(s.aoiStyle)));
