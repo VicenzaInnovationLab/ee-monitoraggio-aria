@@ -800,7 +800,7 @@ c.controlPanel = ui.Panel([
 var s = {};
 
 s.title = {
-  fontSize: "26px",
+  fontSize: "18px",
   fontWeight: "bold",
   color: "#b71c1a"
 };
