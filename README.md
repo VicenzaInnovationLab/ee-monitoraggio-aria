@@ -2,7 +2,7 @@
 <h1 align="center">Osservazione degli inquinanti atmosferici nel vicentino mediante i dati satellitari Copernicus</h1>
 <p align="right">a cura del <a href="https://digitalinnovationhubvicenza.it/">Digital Innovation Hub Vicenza</a></p>
 
-Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la nostra web app basata su Google Earth Engine, una piattaforma big data, e immagini satellitari europei.
+Esplora e compara i livelli della concentrazione di vari costituenti atmosferici nel territorio vicentino e veneto usando la nostra web app basata su Google Earth Engine, una piattaforma Big Data, e immagini satellitari europei.
 
 [<p align="center"><img src="img/webapp-button-blue.png" alt="open web app button" width="200"></p>](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria)
 
@@ -63,14 +63,14 @@ Lo slider "Fai lo Stretch" permette di sperimentare con la gamma di colore, aume
 
 ### Struttura del repository
 
-- `img/` - cartella con le immagini usate in questo readme
+- `img/` - cartella con le immagini usate in questo Readme
 - `code.js` - codice della web app per Earth Engine
 - `LICENSE.md` - file della licenza
 - `README.md` - questo file
 
 ### Come usare il codice sorgente
 
-Il codice è stato sviluppato per essere eseguito all'interno della  piattaforma big data che si chiama [Google Earth Engine](https://earthengine.google.com/). In caso se vuoi esaminare gli algoritmi sottostanti o produrre una web app derivata è necessario avere un account gratuito Earth Engine. Se vuoi invece solo utilizzare la web app, basta [aprire il link](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria).
+Il codice è stato sviluppato per essere eseguito all'interno della  piattaforma Big Data che si chiama [Google Earth Engine](https://earthengine.google.com/). In caso se vuoi esaminare gli algoritmi sottostanti o produrre una web app derivata è necessario avere un account gratuito Earth Engine. Se vuoi invece solo utilizzare la web app, basta [aprire il link](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria).
 
 Non appena hai l'account Earth Engine, esplora la sua interfaccia con [questo manuale](https://developers.google.com/earth-engine/guides/playground). Poi basta copiare il codice dal file `code.js` da questo repository a uno script Earth Engine per eseguirlo.
 
