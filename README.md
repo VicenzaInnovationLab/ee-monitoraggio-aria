@@ -27,9 +27,9 @@ Esplora e compara i livelli della concentrazione di vari costituenti atmosferici
 
 ## Introduzione
 
-Vari gas e aerosol sono componenti integranti dell'atmosfera. L'aumento della loro concentrazione può portare a conseguenze devastanti sulla salute. Il monitoraggio satellitare di tali componenti dell'atmosfera aiuta a tenere d'occhio questa situazione in maniera dinamica. [Sentinel-5P](https://sentinel.esa.int/web/sentinel/missions/sentinel-5p), il nuovo satellite del Copernicus, un programma europeo di osservazione della Terra, ci offre una grande opportunità per farlo.
+Vari gas e aerosol sono componenti integranti dell'atmosfera. L'aumento della loro concentrazione può portare a conseguenze devastanti sulla salute. Il monitoraggio satellitare di tali componenti dell'atmosfera aiuta a tenere d'occhio questa situazione in maniera dinamica. [Sentinel-5P](https://sentinel.esa.int/web/sentinel/missions/sentinel-5p), il nuovo satellite del programma europeo di osservazione della Terra Copernicus ci offre una grande opportunità per farlo.
 
-Questo repository contiene il codice JavaScript che abbiamo utilizzato per l'elaborazione dei dati e per generare la web app. Consente di osservare la distribuzione dei vari componenti della troposfera (NO₂, CO, SO₂, metano, formaldeide, ozono, nuvolosità) a partire da luglio 2018. I dati dal Sentinel-5P arrivano in tempo quasi reale, ottenuti e elaborati tramite Earth Engine.
+Questo repository contiene il codice JavaScript che abbiamo utilizzato per l'elaborazione dei dati e per generare la web app. Consente di osservare la distribuzione dei vari componenti della troposfera (NO₂, CO, SO₂, metano, formaldeide, ozono, nuvolosità) a partire da 2018. I dati da Sentinel-5P arrivano in tempo quasi reale, ottenuti ed elaborati tramite Earth Engine.
 
 ## Web App
 
@@ -37,14 +37,14 @@ Questo repository contiene il codice JavaScript che abbiamo utilizzato per l'ela
 
 ### Come usare la web app
 
-L'applicazione è composta da un pannello di controllo a sinistra e una finestra della mappa a destra. Quando la web app è aperta (potrebbero volerci alcuni secondi per caricarla), appare una mappa della provincia di Vicenza.
+L'applicazione è composta da un pannello di controllo a sinistra e da una finestra della mappa a destra. Quando la web app è aperta (potrebbero volerci alcuni secondi per caricarla), appare una mappa della provincia di Vicenza.
 
 Nel pannello è possibile:
 
 - Scegliere il territorio di interesse - l'intera regione del Veneto, una provincia separata o un comune separato.
 - Selezionare il costituente troposferico di interesse. Per impostazione predefenita è selezionato il contenuto NO₂ colonnare.
-- Scegliere il periodo. Nonostante il fatto che per il territorio del Nord Italia le riprese spaziali avvengano quotidianamente, la presenza di nuvole rende difficile osservare l'inquinamento sottostante. Pertanto, è necessario di aggregare i valori in una settimana o anche di più. A tale scopo, utilizza questo strumento per selezionare le date di inizio e di fine del periodo. Per impostazione predefinita, vengono usati gli ultimi 10 giorni.
-- Esplorare la legenda abbinando colori e loro significati alla mappa.
+- Scegliere il periodo. Nonostante il fatto che per il territorio del Nord Italia le riprese spaziali avvengano quotidianamente, la presenza di nuvole rende difficile osservare l'inquinamento sottostante. Pertanto, è necessario aggregare i valori in una settimana o anche di più. A tale scopo, utilizza questo strumento per selezionare le date di inizio e di fine del periodo. Per impostazione predefinita, vengono usati gli ultimi 10 giorni.
+- Esplorare la legenda abbinando colori e i loro significati alla mappa.
 - Cliccare sulla mappa e visualizzare sul pannello i valori misurati nel punto.
 - Esportare il risultato per il punto cliccato in un file CSV.
 - Utilizzare la **modalità di confronto**. Questa modalità consente di mostrare le aree il cui livello di concentrazione differisce dal valore medio per il periodo selezionato in una determinata area.
@@ -52,12 +52,12 @@ Nel pannello è possibile:
 ### Come interpretare la mappa
 
 #### Modalità normale
-Quando la modalità di confronto non è accesa, i colori sulla mappa dimostrano la concentrazione media del costituente selezionato nel periodo selezionato. I vari costituenti sono espressi con diverse unita di misura, quindi leggi accuratamente la legenda.
+Quando la modalità di confronto non è accesa, i colori sulla mappa dimostrano la concentrazione media del costituente prescelto nel periodo selezionato. I vari costituenti sono espressi con diverse unità di misura, quindi leggi accuratamente la legenda.
 
 #### Modalità di confronto
 Quando la modalità di confronto è accesa, i colori sulla mappa dimostrano la deviazione dalla media (verde) sia in alto (rosso) che in basso (blu).
 <p align="center"><img  src="img/screenshot.png" alt="app screenshot" width="800"></p>
-Lo slider "Fai lo Stretch" permette di sperimentare con la gamma di colore, aumentando il contrast ose necessario per evedenziare dei cambiamenti lievi.
+Lo slider "Fai lo Stretch" permette di sperimentare con la gamma di colore, aumentando il contrasto se necessario per evidenziare dei cambiamenti lievi.
 
 ## Codice sorgente
 
