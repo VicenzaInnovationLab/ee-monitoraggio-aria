@@ -27,13 +27,13 @@ Esplora e compara i livelli della concentrazione di vari costituenti atmosferici
 
 ## Introduzione
 
-Vari gas e aerosol sono componenti integranti dell'atmosfera. L'aumento della loro concentrazione può portare a conseguenze desolanti sulla salute. Il monitoraggio satellitare di tali componenti dell'atmosfera aiuta a tenere d'occhio questa situazione dinamica. [Sentinel-5P](https://sentinel.esa.int/web/sentinel/missions/sentinel-5p), il nuovo satellite del Copernicus, un programma europeo di osservazione della Terra, ci offre una grande opportunità per farlo.
+Vari gas e aerosol sono componenti integranti dell'atmosfera. L'aumento della loro concentrazione può portare a conseguenze devastanti sulla salute. Il monitoraggio satellitare di tali componenti dell'atmosfera aiuta a tenere d'occhio questa situazione in maniera dinamica. [Sentinel-5P](https://sentinel.esa.int/web/sentinel/missions/sentinel-5p), il nuovo satellite del Copernicus, un programma europeo di osservazione della Terra, ci offre una grande opportunità per farlo.
 
 Questo repository contiene il codice JavaScript che abbiamo utilizzato per l'elaborazione dei dati e per generare la web app. Consente di osservare la distribuzione dei vari componenti della troposfera (NO₂, CO, SO₂, metano, formaldeide, ozono, nuvolosità) a partire da luglio 2018. I dati dal Sentinel-5P arrivano in tempo quasi reale, ottenuti e elaborati tramite Earth Engine.
 
 ## Web App
 
-**La web app è dedicata allo studio della distribuzione relativa di diverse sostanze nella troposfera. Non mostra il superamento delle concentrazioni massime ammissibili, però può essere utilizzata con dati provenienti da altre fonti per ottenere un quadro completo dell'inquinamento di aria.**
+**La web app è dedicata allo studio della distribuzione relativa di diverse sostanze nella troposfera. Non mostra il superamento delle concentrazioni massime ammissibili, però può essere utilizzata con dati provenienti da altre fonti per ottenere un quadro completo dell'inquinamento dell'aria.**
 
 ### Come usare la web app
 
@@ -42,9 +42,9 @@ L'applicazione è composta da un pannello di controllo a sinistra e una finestra
 Nel pannello è possibile:
 
 - Scegliere il territorio di interesse - l'intera regione del Veneto, una provincia separata o un comune separato.
-- Selezionare il costituente troposferico di interesse. Per impostazione predefenita il contenuto NO₂ colonnare è selezionato.
-- Scegliere il periodo. Nonostante il fatto che per il territorio del Nord Italia le riprese spaziali avvengano quotidianamente, la presenza di nuvole rende difficile osservare l'inquinamento di sotto. Pertanto, è necessario di aggregare i valori in una settimana o anche di più. A tale scopo, utilizza questo strumento per selezionare le date di inizio e di fine del periodo. Per impostazione predefinita, vengono usati gli ultimi 10 giorni.
-- Esplorare la leggenda abbinando colori e loro significati alla mappa.
+- Selezionare il costituente troposferico di interesse. Per impostazione predefenita è selezionato il contenuto NO₂ colonnare.
+- Scegliere il periodo. Nonostante il fatto che per il territorio del Nord Italia le riprese spaziali avvengano quotidianamente, la presenza di nuvole rende difficile osservare l'inquinamento sottostante. Pertanto, è necessario di aggregare i valori in una settimana o anche di più. A tale scopo, utilizza questo strumento per selezionare le date di inizio e di fine del periodo. Per impostazione predefinita, vengono usati gli ultimi 10 giorni.
+- Esplorare la legenda abbinando colori e loro significati alla mappa.
 - Cliccare sulla mappa e visualizzare sul pannello i valori misurati nel punto.
 - Esportare il risultato per il punto cliccato in un file CSV.
 - Utilizzare la **modalità di confronto**. Questa modalità consente di mostrare le aree il cui livello di concentrazione differisce dal valore medio per il periodo selezionato in una determinata area.
@@ -52,7 +52,7 @@ Nel pannello è possibile:
 ### Come interpretare la mappa
 
 #### Modalità normale
-Quando la modalità di confronto non è accesa, i colori sulla mappa dimostrano la concentrazione media del costituente selezionato nel periodo selezionato. I vari costituenti sono espressi con diverse unita di misura, quindi leggi accuratamente la leggenda.
+Quando la modalità di confronto non è accesa, i colori sulla mappa dimostrano la concentrazione media del costituente selezionato nel periodo selezionato. I vari costituenti sono espressi con diverse unita di misura, quindi leggi accuratamente la legenda.
 
 #### Modalità di confronto
 Quando la modalità di confronto è accesa, i colori sulla mappa dimostrano la deviazione dalla media (verde) sia in alto (rosso) che in basso (blu).
@@ -72,7 +72,7 @@ Lo slider "Fai lo Stretch" permette di sperimentare con la gamma di colore, aume
 
 Il codice è stato sviluppato per essere eseguito all'interno della  piattaforma big data che si chiama [Google Earth Engine](https://earthengine.google.com/). In caso se vuoi esaminare gli algoritmi sottostanti o produrre una web app derivata è necessario avere un account gratuito Earth Engine. Se vuoi invece solo utilizzare la web app, basta [aprire il link](https://vicenzainnovationlab.users.earthengine.app/view/monitoraggio-aria).
 
-Non appena hai l'account Earth Engine, esplora la sua interfaccia con [questo manuale](https://developers.google.com/earth-engine/guides/playground). Poi basta copiare il codice dal file `code.js` da questo repo a uno script Earth Engine per esiguirlo.
+Non appena hai l'account Earth Engine, esplora la sua interfaccia con [questo manuale](https://developers.google.com/earth-engine/guides/playground). Poi basta copiare il codice dal file `code.js` da questo repository a uno script Earth Engine per eseguirlo.
 
 ## Licenza
 
@@ -93,4 +93,4 @@ In cambio, all’utente è chiesto solo d'indicare la fonte delle informazioni e
 
 ## Ringraziamenti
 
-Ringraziamo [Vasily Lobanov](https://www.linkedin.com/in/lobanov-v/) del Centro Earth Observation della [RUDN University](https://eng.rudn.ru/) per il prezioso sopporto nello sviluppo della interfaccia grafica della web app.
+Ringraziamo [Vasily Lobanov](https://www.linkedin.com/in/lobanov-v/) del Centro Earth Observation della [RUDN University](https://eng.rudn.ru/) per il prezioso supporto nello sviluppo della interfaccia grafica della web app.
